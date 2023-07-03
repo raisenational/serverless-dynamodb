@@ -28,7 +28,7 @@ function writeSeedBatch(dynamodbWriteFunction, tableName, seeds) {
       })),
     },
   };
-  return new BbPromise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     // interval lets us know how much time we have burnt so far. This lets us have a backoff mechanism to try
     // again a few times in case the Database resources are in the middle of provisioning.
     let interval = 0;
@@ -82,7 +82,7 @@ function writeSeeds(dynamodbWriteFunction, tableName, seeds) {
  * @param {string} fileName The path to the file
  */
 function fileExists(fileName) {
-  return new BbPromise((resolve) => {
+  return new Promise((resolve) => {
     fs.exists(fileName, (exists) => resolve(exists));
   });
 }

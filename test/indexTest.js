@@ -20,15 +20,13 @@ function get(url) {
 
 function getWithRetry(url, retryCount, previousError) {
   retryCount = retryCount || 0;
-  if (retryCount >= 3) {
+  if (retryCount >= 30) {
     return Promise.reject(new Error("Exceeded retry count for get of " + url + ": " + previousError.message));
   }
   return get(url)
-    .catch(function(error) {
-      return new Promise(function(resolve) { setTimeout(resolve, 10000); })
-        .then(function() {
-          return getWithRetry(url, retryCount + 1, error);
-        });
+    .catch(async function(error) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return getWithRetry(url, retryCount + 1, error);
     });
 }
 
@@ -49,19 +47,14 @@ describe("Port function",function(){
     assert(service.port < 65536)
   });
 
-  it("Service can be reached on port",function() {
+  it("Service can be reached on port", async function() {
     this.timeout(40000);
-    return service.startHandler()
-      .then(function() {
-        return new Promise(function(resolve) { setTimeout(resolve, 2000); });
-      })
-      .then(function() {
-        return getWithRetry(`http://localhost:${service.port}/shell/`);
-      })
+    await service.startHandler()
+    await getWithRetry(`http://localhost:${service.port}/`);
   });
 
-  after(function(){
-    return service.endHandler();
+  after(async function(){
+    await service.endHandler();
   });
 });
 

@@ -1,6 +1,5 @@
 "use strict";
 const _ = require("lodash");
-const BbPromise = require("bluebird");
 const AWS = require("aws-sdk");
 const dynamodbLocal = require("aws-dynamodb-local");
 const seeder = require("./src/seeder");
@@ -206,7 +205,7 @@ class ServerlessDynamodbLocal {
         if (this.shouldExecute()) {
             const dynamodb = this.dynamodbOptions();
             const tables = this.tables;
-            return BbPromise.each(tables, (table) => this.createTable(dynamodb, table));
+            return Promise.all(tables.map((table) => this.createTable(dynamodb, table)));
         } else {
             this.serverlessLog("Skipping migration: DynamoDB Local is not available for stage: " + this.stage);
         }
@@ -217,7 +216,7 @@ class ServerlessDynamodbLocal {
             const options = this.options;
             const dynamodb = this.dynamodbOptions(options);
 
-            return BbPromise.each(this.seedSources, (source) => {
+            return Promise.all(this.seedSources.map((source) => {
                 if (!source.table) {
                     throw new Error("seeding source \"table\" property not defined");
                 }
@@ -225,20 +224,20 @@ class ServerlessDynamodbLocal {
                 .then((seeds) => seeder.writeSeeds(dynamodb.doc.batchWrite.bind(dynamodb.doc), source.table, seeds));
                 const rawSeedPromise = seeder.locateSeeds(source.rawsources || [])
                 .then((seeds) => seeder.writeSeeds(dynamodb.raw.batchWriteItem.bind(dynamodb.raw), source.table, seeds));
-                return BbPromise.all([seedPromise, rawSeedPromise]);
-            });
+                return Promise.all([seedPromise, rawSeedPromise]);
+            }));
         } else {
             this.serverlessLog("Skipping seeding: DynamoDB Local is not available for stage: " + this.stage);
         }
     }
 
     removeHandler() {
-        return new BbPromise((resolve) => dynamodbLocal.remove(resolve));
+        return new Promise((resolve) => dynamodbLocal.remove(resolve));
     }
 
     installHandler() {
         const options = this.options;
-        return new BbPromise((resolve) => dynamodbLocal.install(resolve, options.localPath));
+        return new Promise((resolve) => dynamodbLocal.install(resolve, options.localPath));
     }
 
     startHandler() {
@@ -263,7 +262,7 @@ class ServerlessDynamodbLocal {
             if (!options.noStart) {
               dynamodbLocal.start(options);
             }
-            return BbPromise.resolve()
+            return Promise.resolve()
             .then(() => options.migrate && this.migrateHandler())
             .then(() => options.seed && this.seedHandler());
         } else {
@@ -340,7 +339,7 @@ class ServerlessDynamodbLocal {
     }
 
     createTable(dynamodb, migration) {
-        return new BbPromise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (migration.StreamSpecification && migration.StreamSpecification.StreamViewType) {
                 migration.StreamSpecification.StreamEnabled = true;
             }
