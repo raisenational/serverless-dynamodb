@@ -1,4 +1,4 @@
-# serverless-offline-dynamodb
+# serverless-dynamodb
 
 > **Note**
 > This is a continuation of and drop-in replacement for `serverless-dynamodb-local`
@@ -23,7 +23,7 @@ Requires:
   - Java (either JRE or JDK) version 11.x or newer, for example [Adoptium](https://adoptium.net/)
   - [Docker Engine and CLI](https://docs.docker.com/engine/install/)
 
-Run `npm install serverless-offline-dynamodb`
+Run `npm install serverless-dynamodb`
 
 If using the Java version (i.e. not docker), install DynamoDB Local with `serverless dynamodb install`
 
@@ -38,10 +38,10 @@ serverless.yaml:
 ```yaml
 plugins:
   - serverless-offline
-  - serverless-offline-dynamodb
+  - serverless-dynamodb
 
 custom:
-  serverless-offline-dynamodb:
+  serverless-dynamodb:
     port: 8000
     docker: false
 ```
@@ -52,10 +52,10 @@ serverless.js / serverless.ts:
 export default {
   plugins: [
     "serverless-offline",
-    "serverless-offline-dynamodb",
+    "serverless-dynamodb",
   ],
   custom: {
-    'serverless-offline-dynamodb': {
+    'serverless-dynamodb': {
       port: 8000,
       docker: false,
     }
@@ -90,7 +90,7 @@ Add both plugins to your serverless config file, for example:
 
 ```yaml
 plugins:
-  - serverless-offline-dynamodb
+  - serverless-dynamodb
   - serverless-offline # must be loaded after
 ```
 
@@ -265,9 +265,9 @@ If seed config is set to true, your configuration will be seeded automatically o
 This is a drop-in replacement for `serverless-dynamodb-local`. To upgrade therefore:
 
 1. Uninstall `serverless-dynamodb-local`, e.g. `npm uninstall serverless-dynamodb-local`
-2. Install `serverless-offline-dynamodb`, e.g. `npm install serverless-offline-dynamodb`
-3. Update references in your code, including your serverless config, from `serverless-dynamodb-local` to `serverless-offline-dynamodb`
-4. (optional) Update your serverless config custom `dynamodb` key to `serverless-offline-dynamodb`
+2. Install `serverless-dynamodb`, e.g. `npm install serverless-dynamodb`
+3. Update references in your code, including your serverless config, from `serverless-dynamodb-local` to `serverless-dynamodb`
+4. (optional) Update your serverless config custom `dynamodb` key to `serverless-dynamodb`
 
 ### Why fork?
 
@@ -299,9 +299,9 @@ We hope to address all of these, so that people have a stable and reliable versi
 - Well documented:
   - We care deeply about solid documentation, and ideally writing code that makes things so easy to use they don't need documentation. We intentionally changed the name to distinguish this package easily, and updated the documentation here to explain the relationship between this and `dynamodb-localhost`.
 - Community:
-  - We're committed to supporting the community around `aws-dynamodb-local` and `serverless-offline-dynamodb`. We're a charity that works in the open, with all our software projects being open-source. Our team members have experience supporting communities on several open-source projects, as well as being open-source maintainers of popular projects that accept community contributions.
+  - We're committed to supporting the community around `aws-dynamodb-local` and `serverless-dynamodb`. We're a charity that works in the open, with all our software projects being open-source. Our team members have experience supporting communities on several open-source projects, as well as being open-source maintainers of popular projects that accept community contributions.
 
-If you have feedback on our fork, positive or constructive, we'd love to hear it. Either [open a GitHub issue](https://github.com/raisenational/serverless-offline-dynamodb/issues/new) or contact us using the details on [our profile](https://github.com/raisenational).
+If you have feedback on our fork, positive or constructive, we'd love to hear it. Either [open a GitHub issue](https://github.com/raisenational/serverless-dynamodb/issues/new) or contact us using the details on [our profile](https://github.com/raisenational).
 
 ## Contributing
 
@@ -315,4 +315,4 @@ Pull requests are welcomed on GitHub! To get started:
 
 ## Credits
 
-serverless-offline-dynamodb is derived from [99x/serverless-dynamodb-local](https://github.com/99x/serverless-dynamodb-local).
+serverless-dynamodb is derived from [99x/serverless-dynamodb-local](https://github.com/99x/serverless-dynamodb-local).

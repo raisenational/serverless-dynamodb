@@ -10,7 +10,7 @@ class ServerlessDynamodbLocal {
         this.serverless = serverless;
         this.service = serverless.service;
         this.serverlessLog = serverless.cli.log.bind(serverless.cli);
-        this.config = this.service.custom && this.service.custom.dynamodb || {};
+        this.config = this.service.custom && this.service.custom['serverless-dynamodb'] || this.service.custom.dynamodb || {};
         this.options = _.merge({
           localPath: serverless.config && path.join(serverless.config.servicePath, '.dynamodb')
           },
@@ -141,14 +141,12 @@ class ServerlessDynamodbLocal {
     }
 
     get port() {
-        const config = this.service.custom && this.service.custom.dynamodb || {};
-        const port = _.get(config, "start.port", 8000);
+        const port = _.get(this.config, "start.port", 8000);
         return port;
     }
 
     get host() {
-        const config = this.service.custom && this.service.custom.dynamodb || {};
-        const host = _.get(config, "start.host", "localhost");
+        const host = _.get(this.config, "start.host", "localhost");
         return host;
     }
 
@@ -242,12 +240,11 @@ class ServerlessDynamodbLocal {
 
     startHandler() {
         if (this.shouldExecute()) {
-            const config = this.service.custom && this.service.custom.dynamodb || {};
             const options = _.merge({
                     sharedDb: this.options.sharedDb || true,
                     install_path: this.options.localPath
                 },
-                config && config.start,
+                this.config.start,
                 this.options
             );
 
@@ -322,9 +319,8 @@ class ServerlessDynamodbLocal {
      * Gets the seeding sources
      */
     get seedSources() {
-        const config = this.service.custom.dynamodb;
-        const seedConfig = _.get(config, "seed", {});
-        const seed = this.options.seed || config.start.seed || seedConfig;
+        const seedConfig = _.get(this.config, "seed", {});
+        const seed = this.options.seed || this.config.start.seed || seedConfig;
         let categories;
         if (typeof seed === "string") {
             categories = seed.split(",");

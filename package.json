@@ -1,12 +1,12 @@
 {
-    "name": "serverless-offline-dynamodb",
+    "name": "serverless-dynamodb",
     "version": "0.2.41",
     "description": "Serverless plugin to run DynamoDB local",
     "license": "MIT",
     "author": "Adam Jones (domdomegg)",
     "repository": {
         "type": "git",
-        "url": "https://github.com/raisenational/serverless-offline-dynamodb"
+        "url": "https://github.com/raisenational/serverless-dynamodb"
     },
     "main": "index.js",
     "scripts": {
