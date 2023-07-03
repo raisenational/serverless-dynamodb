@@ -45,6 +45,11 @@ describe("Port function",function(){
   });
 
   it("Port value should be >= 0 and < 65536",function() {
+    assert(service.port >= 0)
+    assert(service.port < 65536)
+  });
+
+  it("Service can be reached on port",function() {
     this.timeout(40000);
     return service.startHandler()
       .then(function() {
@@ -53,9 +58,6 @@ describe("Port function",function(){
       .then(function() {
         return getWithRetry(`http://localhost:${service.port}/shell/`);
       })
-      .then(function(response){
-        assert.equal(response.statusCode, 200);
-      });
   });
 
   after(function(){

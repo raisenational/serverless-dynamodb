@@ -1,49 +1,119 @@
-serverless-dynamodb-local
-=================================
+# serverless-offline-dynamodb
 
-[![Join the chat at https://gitter.im/99xt/serverless-dynamodb-local](https://badges.gitter.im/99xt/serverless-dynamodb-local.svg)](https://gitter.im/99xt/serverless-dynamodb-local?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![npm version](https://badge.fury.io/js/serverless-dynamodb-local.svg)](https://badge.fury.io/js/serverless-dynamodb-local)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+> **Note**
+> This is a continuation of and drop-in replacement for `serverless-dynamodb-local`
+> (for more info, see [migrating from serverless-dynamodb-local](#migrating-from-serverless-dynamodb-local))
 
-## This Plugin Requires
-* serverless@^1
-* Java Runtime Engine (JRE) version 6.x or newer _OR_ docker CLI client
+This [Serverless Framework](https://github.com/serverless/serverless) plugin allows you to run [AWS DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html).
 
-## Features
-* Install DynamoDB Local Java program
-* Run DynamoDB Local as Java program on the local host or in docker container
-* Start DynamoDB Local with all the parameters supported (e.g port, inMemory, sharedDb)
-* Table Creation for DynamoDB Local
+Features:
+- Download and install DynamoDB Local
+- Start, stop and restart DynamoDB Local, supporting optional attributes as per [AWS's DynamoDB Local Documentation](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html) such as `port`, `inMemory`, `sharedDb`.
+- Run DynamoDB Local as a Java program or in a docker container.
+- Uninstall and remove DynamoDB Local.
+- Create tables (migrations), and insert seed data.
+- Compatible with other plugins, including `serverless-offline`, `serverless-webpack` and `serverless-offline-ses-v2`.
 
-## Install Plugin
-`npm install --save serverless-dynamodb-local`
+## Install
 
-Then in `serverless.yml` add following entry to the plugins array: `serverless-dynamodb-local`
-```yml
+Requires:
+- [Node.js](https://nodejs.org/)
+- [Serverless](https://github.com/serverless/serverless) v1, v2 or v3
+- One of:
+  - Java (either JRE or JDK) version 11.x or newer, for example [Adoptium](https://adoptium.net/)
+  - [Docker Engine and CLI](https://docs.docker.com/engine/install/)
+
+Run `npm install serverless-offline-dynamodb`
+
+If using the Java version (i.e. not docker), install DynamoDB Local with `serverless dynamodb install`
+
+## Usage
+
+### Serverless configuration
+
+Add it to your list of plugins, optionally with custom config:
+
+serverless.yaml:
+
+```yaml
 plugins:
-  - serverless-dynamodb-local
+  - serverless-offline
+  - serverless-offline-dynamodb
+
+custom:
+  serverless-offline-dynamodb:
+    port: 8000
+    docker: false
 ```
 
-## Using the Plugin
-1) Install DynamoDB Local (unless using docker setup, see below)
-`sls dynamodb install`
+serverless.js / serverless.ts:
 
-2) Add DynamoDB Resource definitions to your Serverless configuration, as defined here: https://serverless.com/framework/docs/providers/aws/guide/resources/#configuration
+```ts
+export default {
+  plugins: [
+    "serverless-offline",
+    "serverless-offline-dynamodb",
+  ],
+  custom: {
+    'serverless-offline-dynamodb': {
+      port: 8000,
+      docker: false,
+    }
+  }
+}
+```
 
-3) Start DynamoDB Local and migrate (DynamoDB will process incoming requests until you stop it. To stop DynamoDB, type Ctrl+C in the command prompt window). Make sure above command is executed before this.
-`sls dynamodb start --migrate`
+### In your code
 
+Set the 'region', 'endpoint' and 'credentials' parameters in the AWS SDK constructor. For example:
 
-Note: Read the detailed section for more information on advanced options and configurations. Open a browser and go to the url http://localhost:8000/shell to access the web shell for dynamodb local.
+```ts
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
-## Install: sls dynamodb install
+const client = new DynamoDBClient({
+  region: 'localhost',
+  endpoint: 'http://0.0.0.0:8000',
+  credentials: {
+    accessKeyId: 'MockAccessKeyId',
+    secretAccessKey: 'MockSecretAccessKey'
+  },
+})
+```
+
+### Running
+
+#### With serverless-offline
+
+Start serverless-offline with `serverless offline start`. It automatically starts DynamoDB Local from this plugin.
+
+Add both plugins to your serverless config file, for example:
+
+```yaml
+plugins:
+  - serverless-offline-dynamodb
+  - serverless-offline # must be loaded after
+```
+
+To stop serverless-offline, and DynamoDB Local, enter Ctrl+C in the terminal window.
+
+#### Manually
+
+Start DynamoDB Local with `serverless dynamodb start`. DynamoDB Local will begin processing incoming requests.
+
+To stop DynamoDB Local, enter Ctrl+C in the terminal window.
+
+## Command reference
+
+### Install: serverless dynamodb install
+
 This installs the Java program locally. If using docker, this step is not required.
 
 To remove the installed dynamodb local, run:
-`sls dynamodb remove`
-Note: This is useful if the sls dynamodb install failed in between to completely remove and install a new copy of DynamoDB local.
+`serverless dynamodb remove`
+Note: This is useful if the serverless dynamodb install failed in between to completely remove and install a new copy of DynamoDB local.
 
-## Start: sls dynamodb start
+### Start: serverless dynamodb start
+
 This starts the DynamoDB Local instance, either as a local Java program or, if the `--docker` flag is set, 
 by running it within a docker container. The default is to run it as a local Java program.
 
@@ -53,7 +123,7 @@ All CLI options are optional:
 --port  		  -p  Port to listen on. Default: 8000
 --cors                    -c  Enable CORS support (cross-origin resource sharing) for JavaScript. You must provide a comma-separated "allow" list of specific domains. The default setting for -cors is an asterisk (*), which allows public access.
 --inMemory                -i  DynamoDB; will run in memory, instead of using a database file. When you stop DynamoDB;, none of the data will be saved. Note that you cannot specify both -dbPath and -inMemory at once.
---dbPath                  -d  The directory where DynamoDB will write its database file. If you do not specify this option, the file will be written to the current directory. Note that you cannot specify both -dbPath and -inMemory at once. For the path, current working directory is <projectroot>/node_modules/serverless-dynamodb-local/dynamob. For example to create <projectroot>/node_modules/serverless-dynamodb-local/dynamob/<mypath> you should specify -d <mypath>/ or --dbPath <mypath>/ with a forwardslash at the end.
+--dbPath                  -d  The directory where DynamoDB will write its database file. If you do not specify this option, the file will be written to the current directory. Note that you cannot specify both -dbPath and -inMemory at once. For the path, current working directory is <projectroot>/node_modules/aws-dynamodb-local/dynamodb. For example to create <projectroot>/node_modules/aws-dynamodb-local/dynamodb/<mypath> you should specify -d <mypath>/ or --dbPath <mypath>/ with a forwardslash at the end.
 --sharedDb                -h  DynamoDB will use a single database file, instead of using separate files for each credential and region. If you specify -sharedDb, all DynamoDB clients will interact with the same set of tables regardless of their region and credential configuration.
 --delayTransientStatuses  -t  Causes DynamoDB to introduce delays for certain operations. DynamoDB can perform some tasks almost instantaneously, such as create/update/delete operations on tables and indexes; however, the actual DynamoDB service requires more time for these tasks. Setting this parameter helps DynamoDB simulate the behavior of the Amazon DynamoDB web service more closely. (Currently, this parameter introduces delays only for global secondary indexes that are in either CREATING or DELETING status.)
 --optimizeDbBeforeStartup -o  Optimizes the underlying database tables before starting up DynamoDB on your computer. You must also specify -dbPath when you use this parameter.
@@ -69,7 +139,7 @@ All CLI options are optional:
 
 All the above options can be added to serverless.yml to set default configuration: e.g.
 
-```yml
+```yaml
 custom:
   dynamodb:
   # If you only want to use DynamoDB Local in some stages, declare them here
@@ -88,7 +158,7 @@ custom:
 ```
 
 Docker setup:
-```yml
+```yaml
 custom:
   dynamodb:
   # If you only want to use DynamoDB Local in some stages, declare them here
@@ -105,17 +175,24 @@ custom:
     # noStart: true
 ```
 
-##  Migrations: sls dynamodb migrate
-### Configuration
+### Migrations: serverless dynamodb migrate
+
+#### Configuration
+
 In `serverless.yml` add following to execute all the migration upon DynamoDB Local Start
-```yml
+
+```yaml
 custom:
   dynamodb:
     start:
       migrate: true
 ```
-### AWS::DynamoDB::Table Resource Template for serverless.yml
-```yml
+
+#### AWS::DynamoDB::Table Resource Template for serverless.yml
+
+Add [DynamoDB Resource definitions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html) to your [Serverless resources configuration](https://www.serverless.com/framework/docs/providers/aws/guide/resources/#configuration). For example:
+
+```yaml
 resources:
   Resources:
     usersTable:
@@ -136,8 +213,9 @@ resources:
 **Note:**
 DynamoDB local doesn't support TTL specification, therefore plugin will simply ignore ttl configuration from Cloudformation template.
 
-## Seeding: sls dynamodb seed
-### Configuration
+### Seeding: serverless dynamodb seed
+
+#### Configuration
 
 In `serverless.yml` seeding categories are defined under `dynamodb.seed`.
 
@@ -145,7 +223,7 @@ If `dynamodb.start.seed` is true, then seeding is performed after table migratio
 
 If you wish to use raw AWS AttributeValues to specify your seed data instead of Javascript types then simply change the variable of any such json files from `sources:` to `rawsources:`.
 
-```yml
+```yaml
 custom:
   dynamodb:
     start:
@@ -167,13 +245,13 @@ custom:
 ```
 
 ```bash
-> sls dynamodb seed --seed=domain,test
-> sls dynamodb start --seed=domain,test
+serverless dynamodb seed --seed=domain,test
+serverless dynamodb start --seed=domain,test
 ```
 
 If seed config is set to true, your configuration will be seeded automatically on startup. You can also put the seed to false to prevent initial seeding to use manual seeding via cli.
 
-```fake-test-users.json example
+```json
 [
   {
     "id": "John",
@@ -182,67 +260,59 @@ If seed config is set to true, your configuration will be seeded automatically o
 ]
 ```
 
-## Using DynamoDB Local in your code
-You need to add the following parameters to the AWS NODE SDK dynamodb constructor
+## Migrating from `serverless-dynamodb-local`
 
-e.g. for dynamodb document client sdk
-```
-var AWS = require('aws-sdk');
-```
-```
-new AWS.DynamoDB.DocumentClient({
-    region: 'localhost',
-    endpoint: 'http://localhost:8000',
-    accessKeyId: 'DEFAULT_ACCESS_KEY',  // needed if you don't have aws credentials at all in env
-    secretAccessKey: 'DEFAULT_SECRET' // needed if you don't have aws credentials at all in env
-})
-```
-e.g. for dynamodb document client sdk
-```
-new AWS.DynamoDB({
-    region: 'localhost',
-    endpoint: 'http://localhost:8000',
-    accessKeyId: 'DEFAULT_ACCESS_KEY',  // needed if you don't have aws credentials at all in env
-    secretAccessKey: 'DEFAULT_SECRET' // needed if you don't have aws credentials at all in env
+This is a drop-in replacement for `serverless-dynamodb-local`. To upgrade therefore:
 
-})
-```
+1. Uninstall `serverless-dynamodb-local`, e.g. `npm uninstall serverless-dynamodb-local`
+2. Install `serverless-offline-dynamodb`, e.g. `npm install serverless-offline-dynamodb`
+3. Update references in your code, including your serverless config, from `serverless-dynamodb-local` to `serverless-offline-dynamodb`
+4. (optional) Update your serverless config custom `dynamodb` key to `serverless-offline-dynamodb`
 
-### Using with serverless-offline plugin
-When using this plugin with serverless-offline, it is difficult to use above syntax since the code should use DynamoDB Local for development, and use DynamoDB Online after provisioning in AWS. Therefore we suggest you to use [serverless-dynamodb-client](https://github.com/99xt/serverless-dynamodb-client) plugin in your code.
+### Why fork?
 
-The `serverless dynamodb start` command can be triggered automatically when using `serverless-offline` plugin.
-Please note that you still need to install DynamoDB Local first.
+**DynamoDB Local changes:** AWS continue to make changes to DynamoDB local, including breaking changes. These changes [break](https://github.com/99x/dynamodb-localhost/issues/79) [things](https://github.com/99x/dynamodb-localhost/issues/83) [in](https://github.com/99x/serverless-dynamodb-local/issues/297) [some](https://github.com/99x/serverless-dynamodb-local/issues/294) [packages](https://github.com/99x/dynamodb-localhost/issues/62), including `serverless-dynamodb-local`.
 
-Add both plugins to your `serverless.yml` file:
-```yaml
-plugins:
-  - serverless-dynamodb-local
-  - serverless-offline
-```
+**99x have stopped maintenance:** 99x used to maintain `dynamodb-localhost` and `serverless-dynamodb-local`. Unfortunately in recent years 99x have stopped updating these packages. They do not look likely to fix these issues soon: many issues and PRs for critical problems have been sitting around for some years now, and the libraries are effectively unusable as-is now. We tried contacting them by email about this, and asked whether they could merge the critical PRs or pass ownership to someone who would maintain the packages. We did not get a reply.
 
-Make sure that `serverless-dynamodb-local` is above `serverless-offline` so it will be loaded earlier.
+**Need for stability and reliability:** At [Raise](https://github.com/raisenational), we've found these packages useful for developing our open-source campaigns platform. However, these packages frequently cause us pain: having to constantly apply custom patches to them and having them break in unexpected ways. We'd like to make the packages stable and reliable for all to use, as well as support the community around these packages.
 
-Now your local DynamoDB database will be automatically started before running `serverless offline`.
+### Why this fork?
 
-### Using with serverless-offline and serverless-webpack plugin
-Run `serverless offline start`. In comparison with `serverless offline`, the `start` command will fire an `init` and a `end` lifecycle hook which is needed for serverless-offline and serverless-dynamodb-local to switch off both ressources.
+At the time of forking, we reviewed other forks available and found none of them met our criteria:
 
-Add plugins to your `serverless.yml` file:
-```yaml
-plugins:
-  - serverless-webpack
-  - serverless-dynamodb-local
-  - serverless-offline #serverless-offline needs to be last in the list
-```
+- Actively maintained (e.g. addressed AWS's recent changes to DynamoDB Local v2.x)
+- Indication that maintenance would continue (e.g. made some commitment to maintaining it into the future, and ideally had organizational backing)
+- Well documented (e.g. had updated their documentation to correctly explain how to install the fork)
+- Open to community contributions (e.g. were open to PRs, had contributing instructions)
 
-## Reference Project
-* [serverless-react-boilerplate](https://github.com/99xt/serverless-react-boilerplate)
+We hope to address all of these, so that people have a stable and reliable version to depend on:
 
-## Links
-* [Dynamodb local documentation](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html)
-* [Contact Us](mailto:ashanf@99x.lk)
-* [NPM Registry](https://www.npmjs.com/package/serverless-dynamodb-local)
+- Maintenance:
+  - We depend on this library to work properly, so that we can develop and test key applications we have in production. As such, we're likely to catch issues quickly ourselves and care about resolving them quickly.
+  - We've got experience and a history of maintaining similar libraries. For example, we created and maintain [aws-ses-v2-local](https://github.com/domdomegg/aws-ses-v2-local) and [serverless-offline-ses-v2](https://github.com/domdomegg/serverless-offline-ses-v2): tools to run the AWS SES service locally. It gets thousands of downloads per week, is actively maintained, and we have reviewed and accepted many community issues and PRs.
+- Maintenance continuing:
+  - We've used this library ourselves for a couple years in our most important applications, and it doesn't look like it's going anywhere. We're highly incentivize to ensure this is kept well maintained for the long-term.
+  - We have a track record of maintaining products externally for a long time. We've never deprecated an in-use library, and we're hitting our [5 year anniversary on some of our libraries](https://github.com/domdomegg/halifax-share-dealing-sdk).
+  - Raise is a [registered charity in England and Wales](https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/5208930) with multiple software engineers, and has been operating for several years.
+  - We're publicly committed to a long-term maintenance plan. In the unlikely event that we are unable to continue maintaining this library, we commit to transferring ownership to another organization, as directed by the community, that will look after this library well.
+- Well documented:
+  - We care deeply about solid documentation, and ideally writing code that makes things so easy to use they don't need documentation. We intentionally changed the name to distinguish this package easily, and updated the documentation here to explain the relationship between this and `dynamodb-localhost`.
+- Community:
+  - We're committed to supporting the community around `aws-dynamodb-local` and `serverless-offline-dynamodb`. We're a charity that works in the open, with all our software projects being open-source. Our team members have experience supporting communities on several open-source projects, as well as being open-source maintainers of popular projects that accept community contributions.
 
-## License
-  [MIT](LICENSE)
+If you have feedback on our fork, positive or constructive, we'd love to hear it. Either [open a GitHub issue](https://github.com/raisenational/serverless-offline-dynamodb/issues/new) or contact us using the details on [our profile](https://github.com/raisenational).
+
+## Contributing
+
+Pull requests are welcomed on GitHub! To get started:
+
+1. Install Git and Node.js
+2. Clone the repository
+3. Install dependencies with `npm install`
+4. Run `npm run test` to run tests
+5. Build with `npm run build`
+
+## Credits
+
+serverless-offline-dynamodb is derived from [99x/serverless-dynamodb-local](https://github.com/99x/serverless-dynamodb-local).

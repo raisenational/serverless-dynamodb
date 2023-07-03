@@ -2,7 +2,7 @@
 const _ = require("lodash");
 const BbPromise = require("bluebird");
 const AWS = require("aws-sdk");
-const dynamodbLocal = require("dynamodb-localhost");
+const dynamodbLocal = require("aws-dynamodb-local");
 const seeder = require("./src/seeder");
 const path = require('path');
 
@@ -190,8 +190,8 @@ class ServerlessDynamodbLocal {
             dynamoOptions = {
                 endpoint: `http://${this.host}:${this.port}`,
                 region: "localhost",
-                accessKeyId: "MOCK_ACCESS_KEY_ID",
-                secretAccessKey: "MOCK_SECRET_ACCESS_KEY",
+                accessKeyId: "MockAccessKeyId",
+                secretAccessKey: "MockSecretAccessKey",
                 convertEmptyValues: options && options.convertEmptyValues ? options.convertEmptyValues : false,
             };
         }

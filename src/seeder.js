@@ -1,5 +1,4 @@
 "use strict";
-const AWS = require("aws-sdk");
 const BbPromise = require("bluebird");
 const _ = require("lodash");
 const path = require("path");

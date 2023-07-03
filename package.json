@@ -1,15 +1,27 @@
 {
-    "name": "serverless-dynamodb-local",
-    "version": "0.2.40",
-    "engines": {
-        "node": ">=4.0"
-    },
-    "description": "Serverless dynamodb local plugin",
-    "author": "99xtechnology.com",
+    "name": "serverless-offline-dynamodb",
+    "version": "0.2.41",
+    "description": "Serverless plugin to run DynamoDB local",
     "license": "MIT",
+    "author": "Adam Jones (domdomegg)",
     "repository": {
         "type": "git",
-        "url": "https://github.com/99xt/serverless-dynamodb-local"
+        "url": "https://github.com/raisenational/serverless-offline-dynamodb"
+    },
+    "main": "index.js",
+    "scripts": {
+        "test": "mocha ./test"
+    },
+    "dependencies": {
+        "aws-sdk": "^2.7.0",
+        "bluebird": "^3.4.6",
+        "aws-dynamodb-local": "^0.0.10",
+        "lodash": "^4.17.0"
+    },
+    "devDependencies": {
+        "chai": "^4.1.1",
+        "mocha": "^6.2.1",
+        "should": "^11.2.1"
     },
     "keywords": [
         "serverless framework plugin",
@@ -25,21 +37,5 @@
         "amazon",
         "amazon web services",
         "serverless.com"
-    ],
-    "main": "index.js",
-    "bin": {},
-    "scripts": {
-        "test": "mocha ./test"
-    },
-    "dependencies": {
-        "aws-sdk": "^2.7.0",
-        "bluebird": "^3.4.6",
-        "dynamodb-localhost": "0.0.9",
-        "lodash": "^4.17.0"
-    },
-    "devDependencies": {
-        "chai": "^4.1.1",
-        "mocha": "^6.2.1",
-        "should": "^11.2.1"
-    }
+    ]
 }
