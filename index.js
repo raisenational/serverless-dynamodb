@@ -365,7 +365,19 @@ class ServerlessDynamodbLocal {
                         gsi.ProvisionedThroughput = defaultProvisioning;
                     });
                 }
-              }
+            }
+
+            if(migration.ContributorInsightsSpecification) {
+                delete migration.ContributorInsightsSpecification;
+            }
+            if(migration.GlobalSecondaryIndexes) {
+                migration.GlobalSecondaryIndexes.forEach((gsi) => {
+                    if (gsi.ContributorInsightsSpecification) {
+                        delete gsi.ContributorInsightsSpecification;
+                    }
+                });
+            }
+
             dynamodb.raw.createTable(migration, (err) => {
                 if (err) {
                     if (err.name === 'ResourceInUseException') {
