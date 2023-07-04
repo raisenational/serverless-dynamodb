@@ -4,7 +4,7 @@
 > This is a continuation of and drop-in replacement for `serverless-dynamodb-local`
 > (for more info, see [migrating from serverless-dynamodb-local](#migrating-from-serverless-dynamodb-local))
 
-This [Serverless Framework](https://github.com/serverless/serverless) plugin allows you to run [AWS DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html).
+This [Serverless Framework](https://github.com/serverless/serverless) plugin allows you to run [AWS DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html) via [aws-dynamodb-local](https://github.com/raisenational/aws-dynamodb-local).
 
 Features:
 - Download and install DynamoDB Local
