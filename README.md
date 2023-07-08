@@ -141,7 +141,7 @@ All the above options can be added to serverless.yml to set default configuratio
 
 ```yaml
 custom:
-  dynamodb:
+  serverless-dynamodb:
   # If you only want to use DynamoDB Local in some stages, declare them here
     stages:
       - dev
@@ -217,15 +217,15 @@ DynamoDB local doesn't support TTL specification, therefore plugin will simply i
 
 #### Configuration
 
-In `serverless.yml` seeding categories are defined under `dynamodb.seed`.
+In `serverless.yml` seeding categories are defined under `serverless-dynamodb.seed`.
 
-If `dynamodb.start.seed` is true, then seeding is performed after table migrations.
+If `serverless-dynamodb.start.seed` is true, then seeding is performed after table migrations.
 
 If you wish to use raw AWS AttributeValues to specify your seed data instead of Javascript types then simply change the variable of any such json files from `sources:` to `rawsources:`.
 
 ```yaml
 custom:
-  dynamodb:
+  serverless-dynamodb:
     start:
       seed: true
 
