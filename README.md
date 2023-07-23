@@ -65,7 +65,7 @@ export default {
 
 ### In your code
 
-Set the 'region', 'endpoint' and 'credentials' parameters in the AWS SDK constructor. For example:
+Set the 'region', 'endpoint' and 'credentials' parameters in the AWS SDK constructor. For example with the AWS SDK V3 (recommended):
 
 ```ts
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -78,6 +78,19 @@ const client = new DynamoDBClient({
     secretAccessKey: 'MockSecretAccessKey'
   },
 })
+```
+
+Or with the older AWS SDK V2:
+
+```ts
+import AWS from "aws-sdk";
+
+const client = new AWS.DynamoDB.DocumentClient({
+  region: 'localhost',
+  endpoint: 'http://0.0.0.0:8000',
+  accessKeyId: 'MockAccessKeyId',
+  secretAccessKey: 'MockSecretAccessKey',
+});
 ```
 
 ### Running
