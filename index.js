@@ -370,6 +370,9 @@ class ServerlessDynamodbLocal {
             if(migration.ContributorInsightsSpecification) {
                 delete migration.ContributorInsightsSpecification;
             }
+            if(migration.KinesisStreamSpecification) {
+                delete migration.KinesisStreamSpecification;
+            }
             if(migration.GlobalSecondaryIndexes) {
                 migration.GlobalSecondaryIndexes.forEach((gsi) => {
                     if (gsi.ContributorInsightsSpecification) {
