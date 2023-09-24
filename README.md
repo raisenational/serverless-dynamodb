@@ -173,7 +173,7 @@ custom:
 Docker setup:
 ```yaml
 custom:
-  dynamodb:
+  serverless-dynamodb:
   # If you only want to use DynamoDB Local in some stages, declare them here
     stages:
       - dev
@@ -196,7 +196,7 @@ In `serverless.yml` add following to execute all the migration upon DynamoDB Loc
 
 ```yaml
 custom:
-  dynamodb:
+  serverless-dynamodb:
     start:
       migrate: true
 ```
