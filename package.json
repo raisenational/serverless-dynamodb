@@ -1,6 +1,6 @@
 {
     "name": "serverless-dynamodb",
-    "version": "0.2.44",
+    "version": "0.2.45",
     "description": "Serverless plugin to run DynamoDB local",
     "license": "MIT",
     "author": "Adam Jones (domdomegg)",
