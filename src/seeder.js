@@ -1,15 +1,10 @@
 "use strict";
-const BbPromise = require("bluebird");
-const _ = require("lodash");
-const path = require("path");
-const fs = require("fs");
+const path = require("node:path");
+const fs = require("node:fs");
 
 // DynamoDB has a 25 item limit in batch requests
 // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
 const MAX_MIGRATION_CHUNK = 25;
-
-// TODO: let this be configurable
-const MIGRATION_SEED_CONCURRENCY = 5;
 
 /**
  * Writes a batch chunk of migration seeds to DynamoDB. DynamoDB has a limit on the number of
@@ -67,59 +62,36 @@ function writeSeeds(dynamodbWriteFunction, tableName, seeds) {
   }
 
   if (seeds.length > 0) {
-    const seedChunks = _.chunk(seeds, MAX_MIGRATION_CHUNK);
-    return BbPromise.map(
-      seedChunks,
-      (chunk) => writeSeedBatch(dynamodbWriteFunction, tableName, chunk),
-      { concurrency: MIGRATION_SEED_CONCURRENCY }
-    )
+    const seedChunks = chunk(seeds, MAX_MIGRATION_CHUNK);
+    return Promise.all(seedChunks.map((chunk) => writeSeedBatch(dynamodbWriteFunction, tableName, chunk)))
       .then(() => console.log("Seed running complete for table: " + tableName));
   }
 }
 
-/**
- * A promise-based function that determines if a file exists
- * @param {string} fileName The path to the file
- */
-function fileExists(fileName) {
-  return new Promise((resolve) => {
-    fs.exists(fileName, (exists) => resolve(exists));
-  });
-}
-
-/**
- * Transform all selerialized Buffer value in a Buffer value inside a json object
- *
- * @param {json} json with serialized Buffer value.
- * @return {json} json with Buffer object.
- */
-function unmarshalBuffer(json) {
-  _.forEach(json, function(value, key) {
-    // Null check to prevent creation of Buffer when value is null
-    if (value !== null && value.type==="Buffer") {
-      json[key]= new Buffer(value.data);
-    }
-  });
-  return json;
-}
+const chunk = (input, size) => {
+  return input.reduce((arr, item, idx) => {
+    return idx % size === 0
+      ? [...arr, [item]]
+      : [...arr.slice(0, -1), [...arr.slice(-1)[0], item]];
+  }, []);
+};
 
 /**
  * Scrapes seed files out of a given location. This file may contain
  * either a simple json object, or an array of simple json objects. An array
  * of json objects is returned.
  *
- * @param {any} location the filename to read seeds from.
+ * @param {string} location the filename to read seeds from.
+ * @returns {object[]} json
  */
 function getSeedsAtLocation(location) {
   // load the file as JSON
   const result = require(location);
 
   // Ensure the output is an array
-  if (Array.isArray(result)) {
-    return _.forEach(result, unmarshalBuffer);
-  } else {
-    return [ unmarshalBuffer(result) ];
-  }
+  const array = Array.isArray(result) ? result : [result];
+
+  return array;
 }
 
 /**
@@ -131,15 +103,12 @@ function locateSeeds(sources, cwd) {
   cwd = cwd || process.cwd();
 
   const locations = sources.map((source) => path.join(cwd, source));
-  return BbPromise.map(locations, (location) => {
-    return fileExists(location).then((exists) => {
-      if(!exists) {
-        throw new Error("source file " + location + " does not exist");
-      }
-      return getSeedsAtLocation(location);
-    });
-  // Smash the arrays together
-  }).then((seedArrays) => [].concat.apply([], seedArrays));
+  return locations.map((location) => {
+    if(!fs.existsSync(location)) {
+      throw new Error("source file " + location + " does not exist");
+    }
+    return getSeedsAtLocation(location);
+  }).flat(1);
 }
 
 module.exports = { writeSeeds, locateSeeds };
