@@ -9,7 +9,7 @@ const MAX_MIGRATION_CHUNK = 25;
 /**
  * Writes a batch chunk of migration seeds to DynamoDB. DynamoDB has a limit on the number of
  * items that may be written in a batch operation.
- * @param {function} dynamodbWriteFunction The DynamoDB DocumentClient.batchWrite or DynamoDB.batchWriteItem function 
+ * @param {function} dynamodbWriteFunction The DynamoDB DocumentClient.batchWrite or DynamoDB.batchWriteItem function
  * @param {string} tableName The table name being written to
  * @param {any[]} seeds The migration seeds being written to the table
  */
@@ -28,17 +28,15 @@ function writeSeedBatch(dynamodbWriteFunction, tableName, seeds) {
     // again a few times in case the Database resources are in the middle of provisioning.
     let interval = 0;
     function execute(interval) {
-      setTimeout(() => dynamodbWriteFunction(params, (err) => {
+      setTimeout(() => dynamodbWriteFunction(params).catch((err) => {
         if (err) {
           if (err.code === "ResourceNotFoundException" && interval <= 5000) {
             execute(interval + 1000);
           } else {
             reject(err);
           }
-        } else {
-          resolve();
         }
-      }), interval);
+      }).then(() => resolve()), interval);
     }
     execute(interval);
   });
@@ -97,6 +95,7 @@ function getSeedsAtLocation(location) {
 /**
  * Locates seeds given a set of files to scrape
  * @param {string[]} sources The filenames to scrape for seeds
+ * @returns {object[]} The items to seed
  */
 function locateSeeds(sources, cwd) {
   sources = sources || [];
