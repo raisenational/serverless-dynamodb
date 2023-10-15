@@ -1,5 +1,4 @@
 "use strict";
-const _ = require("lodash");
 const AWS = require("aws-sdk");
 const dynamodbLocal = require("aws-dynamodb-local");
 const seeder = require("./src/seeder");
@@ -11,11 +10,10 @@ class ServerlessDynamodbLocal {
         this.service = serverless.service;
         this.serverlessLog = serverless.cli.log.bind(serverless.cli);
         this.config = this.service.custom && this.service.custom['serverless-dynamodb'] || this.service.custom.dynamodb || {};
-        this.options = _.merge({
-          localPath: serverless.config && path.join(serverless.config.servicePath, '.dynamodb')
-          },
-          options
-        );
+        this.options = {
+            localPath: serverless.config && path.join(serverless.config.servicePath, '.dynamodb'),
+            ...options,
+        };
         this.provider = "aws";
         this.commands = {
             dynamodb: {
@@ -156,13 +154,11 @@ class ServerlessDynamodbLocal {
     }
 
     get port() {
-        const port = _.get(this.config, "start.port", 8000);
-        return port;
+        return this.config?.start?.port ?? 8000;
     }
 
     get host() {
-        const host = _.get(this.config, "start.host", "localhost");
-        return host;
+        return this.config?.start?.host ?? "localhost";
     }
 
     /**
@@ -254,13 +250,12 @@ class ServerlessDynamodbLocal {
 
     startHandler() {
         if (this.shouldExecute()) {
-            const options = _.merge({
-                    sharedDb: this.options.sharedDb || true,
-                    installPath: this.options.localPath
-                },
-                this.config.start,
-                this.options
-            );
+            const options = {
+                sharedDb: this.options.sharedDb ?? true,
+                installPath: this.options.localPath,
+                ...this.config.start,
+                ...this.options
+            }
 
             // otherwise endHandler will be mis-informed
             this.options = options;
@@ -288,19 +283,19 @@ class ServerlessDynamodbLocal {
     }
 
     getDefaultStack() {
-        return _.get(this.service, "resources");
+        return this.service.resources;
     }
 
     getAdditionalStacks() {
-        return _.values(_.get(this.service, "custom.additionalStacks", {}));
+        return Object.values(this.service.custom?.additionalStacks ?? {});
     }
 
     hasAdditionalStacksPlugin() {
-        return _.get(this.service, "plugins", []).includes("serverless-plugin-additional-stacks");
+        return (this.service.plugins ?? []).includes("serverless-plugin-additional-stacks");
     }
 
     getTableDefinitionsFromStack(stack) {
-        const resources = _.get(stack, "Resources", []);
+        const resources = stack.Resources ?? [];
         return Object.keys(resources).map((key) => {
             if (resources[key].Type === "AWS::DynamoDB::Table") {
                 return resources[key].Properties;
@@ -320,7 +315,7 @@ class ServerlessDynamodbLocal {
         }
 
         if (this.hasAdditionalStacksPlugin()) {
-            stacks = stacks.concat(this.getAdditionalStacks());
+            stacks.push(...this.getAdditionalStacks());
         }
 
         return stacks.map((stack) => this.getTableDefinitionsFromStack(stack)).reduce((tables, tablesInStack) => tables.concat(tablesInStack), []);
@@ -330,7 +325,7 @@ class ServerlessDynamodbLocal {
      * Gets the seeding sources
      */
     get seedSources() {
-        const seedConfig = _.get(this.config, "seed", {});
+        const seedConfig = this.config.seed ?? {};
         const seed = this.options.seed || this.config.start.seed || seedConfig;
         let categories;
         if (typeof seed === "string") {
