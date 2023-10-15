@@ -32,7 +32,12 @@ class ServerlessDynamodbLocal {
                                 shortcut: "o",
                                 usage: "Will connect to the tables online to do an online seed run",
                                 type: "boolean"
-                            }
+                            },
+                            seed: {
+                                shortcut: "s",
+                                usage: "After starting and migrating dynamodb local, injects seed data into your tables. The --seed option determines which data categories to onload.",
+                                // NB: no `type` intentionally to allow both boolean and string values
+                            },
                         }
                     },
                     start: {
@@ -74,20 +79,9 @@ class ServerlessDynamodbLocal {
                                 usage: "Optimizes the underlying database tables before starting up DynamoDB on your computer. You must also specify -dbPath when you use this parameter.",
                                 type: "boolean"
                             },
-                            migrate: {
-                                shortcut: "m",
-                                usage: "After starting dynamodb local, create DynamoDB tables from the current serverless configuration.",
-                                type: "boolean"
-                            },
-                            seed: {
-                                shortcut: "s",
-                                usage: "After starting and migrating dynamodb local, injects seed data into your tables. The --seed option determines which data categories to onload.",
-                                type: "boolean"
-                            },
-                            migration: {
-                                shortcut: 'm',
-                                usage: 'After starting dynamodb local, run dynamodb migrations',
-                                type: "boolean"
+                            help: {
+                                usage: "Prints a usage summary and options.",
+                                type: "boolean",
                             },
                             heapInitial: {
                                 usage: 'The initial heap size. Specify megabytes, gigabytes or terabytes using m, b, t. E.g., "2m"',
@@ -97,17 +91,38 @@ class ServerlessDynamodbLocal {
                                 usage: 'The maximum heap size. Specify megabytes, gigabytes or terabytes using m, b, t. E.g., "2m"',
                                 type: "string"
                             },
+                            docker: {
+                                usage: 'Run DynamoDB inside docker container instead of as a local Java program.',
+                                type: "boolean"
+                            },
+                            dockerPath: {
+                                usage: 'If docker enabled, custom docker path to use.',
+                                type: "string"
+                            },
+                            dockerImage: {
+                                usage: 'If docker enabled, docker image to run.',
+                                type: "string"
+                            },
                             convertEmptyValues: {
                                 shortcut: "e",
                                 usage: "Set to true if you would like the document client to convert empty values (0-length strings, binary buffers, and sets) to be converted to NULL types when persisting to DynamoDB.",
                                 type: "boolean"
-                            }
+                            },
+                            noStart: {
+                              usage: "Do not start DynamoDB local (e.g. for use cases where it is already running)",
+                              type: "boolean",
+                            },
+                            migrate: {
+                                shortcut: "m",
+                                usage: "After starting dynamodb local, create DynamoDB tables from the current serverless configuration.",
+                                type: "boolean"
+                            },
+                            seed: {
+                                shortcut: "s",
+                                usage: "After starting and migrating dynamodb local, injects seed data into your tables. The --seed option determines which data categories to onload.",
+                                // NB: no `type` intentionally to allow both boolean and string values
+                            },
                         }
-                    },
-                    noStart: {
-                      shortcut: "n",
-                      default: false,
-                      usage: "Do not start DynamoDB local (in case it is already running)",
                     },
                     remove: {
                         lifecycleEvents: ["removeHandler"],
@@ -241,7 +256,7 @@ class ServerlessDynamodbLocal {
         if (this.shouldExecute()) {
             const options = _.merge({
                     sharedDb: this.options.sharedDb || true,
-                    install_path: this.options.localPath
+                    installPath: this.options.localPath
                 },
                 this.config.start,
                 this.options
@@ -255,10 +270,7 @@ class ServerlessDynamodbLocal {
               options.dbPath = path.isAbsolute(dbPath) ? dbPath : path.join(this.serverless.config.servicePath, dbPath);
             }
 
-            if (!options.noStart) {
-              dynamodbLocal.start(options);
-            }
-            return Promise.resolve()
+            (options.noStart ? Promise.resolve() : dynamodbLocal.start(options))
             .then(() => options.migrate && this.migrateHandler())
             .then(() => options.seed && this.seedHandler());
         } else {
