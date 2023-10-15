@@ -165,7 +165,7 @@ class ServerlessDynamodbLocal {
      * @return {Boolean} if the handler can run for the provided stage
      */
     shouldExecute() {
-      if (this.config.stages && this.config.stages.includes(this.stage)) {
+      if (!this.config.stages || this.config.stages.includes(this.stage)) {
         return true;
       }
       return false;
