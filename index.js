@@ -230,12 +230,11 @@ class ServerlessDynamodbLocal {
     }
 
     removeHandler() {
-        return new Promise((resolve) => dynamodbLocal.remove(resolve));
+        return dynamodbLocal.remove({ installPath: this.options.localPath });
     }
 
     installHandler() {
-        const options = this.options;
-        return new Promise((resolve) => dynamodbLocal.install(resolve, options.localPath));
+        return dynamodbLocal.install({ installPath: this.options.localPath });
     }
 
     startHandler() {
