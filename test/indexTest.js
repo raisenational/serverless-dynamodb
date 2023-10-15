@@ -4,9 +4,10 @@ const assert = require("chai").assert;
 const http = require ("http");
 const expect = require("chai").expect;
 const should = require("should");
-const aws = require ("aws-sdk");
 const seeder = require("../src/seeder.js");
 const Plugin = require("../index.js");
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');
 
 const serverlessMock = require("./serverlessMock");
 
@@ -59,27 +60,11 @@ describe("Port function",function(){
   });
 });
 
-describe("Check the dynamodb function",function(){
-  it("Endpoint should listen to the port",function () {
-     let server;
-     before(function () {
-      server = dynamodbOptions.listen(port);
-     });
-     after(function () {
-      assert.ok;
-     });
-    });
-
-  it("Should be an object",function(){
-    let dynamoOptions = Plugin.prototype.dynamodbOptions;
-    let raw = new aws.DynamoDB(dynamoOptions);
-    raw.should.be.type("object");
-  });
-
-  it("Should be an object",function(){
-    let dynamoOptions =  Plugin.prototype.dynamodbOptions;
-    let doc = new aws.DynamoDB(dynamoOptions);
-    doc.should.be.type("object");
+describe("dynamodbOptions",function(){
+  it("should return raw and doc objects of right type",function(){
+    const { raw, doc } = Plugin.prototype.dynamodbOptions();
+    raw.should.be.instanceOf(DynamoDBClient);
+    doc.should.be.instanceOf(DynamoDBDocumentClient);
   });
 });
 

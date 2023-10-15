@@ -1,5 +1,6 @@
 "use strict";
-const AWS = require("aws-sdk");
+const { DynamoDBClient, CreateTableCommand, BatchWriteItemCommand } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
 const dynamodbLocal = require("aws-dynamodb-local");
 const seeder = require("./src/seeder");
 const path = require('path');
@@ -192,21 +193,27 @@ class ServerlessDynamodbLocal {
             }
             dynamoOptions = {
                 region: options.region,
-                convertEmptyValues: options && options.convertEmptyValues ? options.convertEmptyValues : false,
             };
         } else {
             dynamoOptions = {
                 endpoint: `http://${this.host}:${this.port}`,
                 region: "localhost",
-                accessKeyId: "MockAccessKeyId",
-                secretAccessKey: "MockSecretAccessKey",
-                convertEmptyValues: options && options.convertEmptyValues ? options.convertEmptyValues : false,
+                credentials: {
+                    accessKeyId: "MockAccessKeyId",
+                    secretAccessKey: "MockSecretAccessKey",
+                },
             };
         }
+        const translateConfig = {
+            marshallOptions: {
+                convertEmptyValues: options?.convertEmptyValues ?? false
+            }
+        }
 
+        const raw = new DynamoDBClient(dynamoOptions);
         return {
-            raw: new AWS.DynamoDB(dynamoOptions),
-            doc: new AWS.DynamoDB.DocumentClient(dynamoOptions)
+            raw,
+            doc: DynamoDBDocumentClient.from(raw, translateConfig)
         };
     }
 
@@ -229,10 +236,8 @@ class ServerlessDynamodbLocal {
                 if (!source.table) {
                     throw new Error("seeding source \"table\" property not defined");
                 }
-                const seedPromise = seeder.locateSeeds(source.sources || [])
-                .then((seeds) => seeder.writeSeeds(dynamodb.doc.batchWrite.bind(dynamodb.doc), source.table, seeds));
-                const rawSeedPromise = seeder.locateSeeds(source.rawsources || [])
-                .then((seeds) => seeder.writeSeeds(dynamodb.raw.batchWriteItem.bind(dynamodb.raw), source.table, seeds));
+                const seedPromise = seeder.writeSeeds((params) => dynamodb.doc.send(new BatchWriteCommand(params)), source.table, seeder.locateSeeds(source.sources || []));
+                const rawSeedPromise = seeder.writeSeeds((params) => dynamodb.raw.send(new BatchWriteItemCommand(params)), source.table, seeder.locateSeeds(source.rawsources || []));
                 return Promise.all([seedPromise, rawSeedPromise]);
             }));
         } else {
@@ -340,68 +345,69 @@ class ServerlessDynamodbLocal {
         return [].concat.apply([], sourcesByCategory);
     }
 
-    createTable(dynamodb, migration) {
-        return new Promise((resolve, reject) => {
-            if (migration.StreamSpecification && migration.StreamSpecification.StreamViewType) {
-                migration.StreamSpecification.StreamEnabled = true;
-            }
-            if (migration.TimeToLiveSpecification) {
-              delete migration.TimeToLiveSpecification;
-            }
-            if (migration.SSESpecification) {
-              migration.SSESpecification.Enabled = migration.SSESpecification.SSEEnabled;
-              delete migration.SSESpecification.SSEEnabled;
-            }
-            if (migration.PointInTimeRecoverySpecification) {
-              delete migration.PointInTimeRecoverySpecification;
-            }
-            if (migration.Tags) {
-                delete migration.Tags;
-            }
-            if (migration.BillingMode === "PAY_PER_REQUEST") {
-                delete migration.BillingMode;
+    /**
+     * @param {{ raw: DynamoDBClient, doc: DynamoDBDocumentClient }} dynamodb DynamoDB clients
+     */
+    async createTable(dynamodb, migration) {
+        if (migration.StreamSpecification && migration.StreamSpecification.StreamViewType) {
+            migration.StreamSpecification.StreamEnabled = true;
+        }
+        if (migration.TimeToLiveSpecification) {
+            delete migration.TimeToLiveSpecification;
+        }
+        if (migration.SSESpecification) {
+            migration.SSESpecification.Enabled = migration.SSESpecification.SSEEnabled;
+            delete migration.SSESpecification.SSEEnabled;
+        }
+        if (migration.PointInTimeRecoverySpecification) {
+            delete migration.PointInTimeRecoverySpecification;
+        }
+        if (migration.Tags) {
+            delete migration.Tags;
+        }
+        if (migration.BillingMode === "PAY_PER_REQUEST") {
+            delete migration.BillingMode;
 
-                const defaultProvisioning = {
-                    ReadCapacityUnits: 5,
-                    WriteCapacityUnits: 5
-                };
-                migration.ProvisionedThroughput = defaultProvisioning;
-                if (migration.GlobalSecondaryIndexes) {
-                    migration.GlobalSecondaryIndexes.forEach((gsi) => {
-                        gsi.ProvisionedThroughput = defaultProvisioning;
-                    });
-                }
-            }
-
-            if(migration.ContributorInsightsSpecification) {
-                delete migration.ContributorInsightsSpecification;
-            }
-            if(migration.KinesisStreamSpecification) {
-                delete migration.KinesisStreamSpecification;
-            }
-            if(migration.GlobalSecondaryIndexes) {
+            const defaultProvisioning = {
+                ReadCapacityUnits: 5,
+                WriteCapacityUnits: 5
+            };
+            migration.ProvisionedThroughput = defaultProvisioning;
+            if (migration.GlobalSecondaryIndexes) {
                 migration.GlobalSecondaryIndexes.forEach((gsi) => {
-                    if (gsi.ContributorInsightsSpecification) {
-                        delete gsi.ContributorInsightsSpecification;
-                    }
+                    gsi.ProvisionedThroughput = defaultProvisioning;
                 });
             }
+        }
 
-            dynamodb.raw.createTable(migration, (err) => {
-                if (err) {
-                    if (err.name === 'ResourceInUseException') {
-                        this.serverlessLog(`DynamoDB - Warn - table ${migration.TableName} already exists`);
-                        resolve();
-                    } else {
-                        this.serverlessLog("DynamoDB - Error - ", err);
-                        reject(err);
-                    }
-                } else {
-                    this.serverlessLog("DynamoDB - created table " + migration.TableName);
-                    resolve(migration);
+        if(migration.ContributorInsightsSpecification) {
+            delete migration.ContributorInsightsSpecification;
+        }
+        if(migration.KinesisStreamSpecification) {
+            delete migration.KinesisStreamSpecification;
+        }
+        if(migration.GlobalSecondaryIndexes) {
+            migration.GlobalSecondaryIndexes.forEach((gsi) => {
+                if (gsi.ContributorInsightsSpecification) {
+                    delete gsi.ContributorInsightsSpecification;
                 }
             });
-        });
+        }
+
+        await dynamodb.raw.send(new CreateTableCommand(migration)).catch(err => {
+            if (err) {
+                if (err.name === 'ResourceInUseException') {
+                    this.serverlessLog(`DynamoDB - Warn - table ${migration.TableName} already exists`);
+                    resolve();
+                } else {
+                    this.serverlessLog("DynamoDB - Error - ", err);
+                    reject(err);
+                }
+            } else {
+                this.serverlessLog("DynamoDB - created table " + migration.TableName);
+                resolve(migration);
+            }
+        })
     }
 }
 module.exports = ServerlessDynamodbLocal;
