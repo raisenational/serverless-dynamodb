@@ -127,27 +127,63 @@ Note: This is useful if the serverless dynamodb install failed in between to com
 
 ### Start: serverless dynamodb start
 
-This starts the DynamoDB Local instance, either as a local Java program or, if the `--docker` flag is set, 
-by running it within a docker container. The default is to run it as a local Java program.
+This starts the DynamoDB Local instance, either as a local Java program or, if the `--docker` flag is set, by running it within a docker container.
 
 All CLI options are optional:
 
-```
---port  		  -p  Port to listen on. Default: 8000
---cors                    -c  Enable CORS support (cross-origin resource sharing) for JavaScript. You must provide a comma-separated "allow" list of specific domains. The default setting for -cors is an asterisk (*), which allows public access.
---inMemory                -i  DynamoDB; will run in memory, instead of using a database file. When you stop DynamoDB;, none of the data will be saved. Note that you cannot specify both -dbPath and -inMemory at once.
---dbPath                  -d  The directory where DynamoDB will write its database file. If you do not specify this option, the file will be written to the current directory. Note that you cannot specify both -dbPath and -inMemory at once. For the path, current working directory is <projectroot>/node_modules/aws-dynamodb-local/dynamodb. For example to create <projectroot>/node_modules/aws-dynamodb-local/dynamodb/<mypath> you should specify -d <mypath>/ or --dbPath <mypath>/ with a forwardslash at the end.
---sharedDb                -h  DynamoDB will use a single database file, instead of using separate files for each credential and region. If you specify -sharedDb, all DynamoDB clients will interact with the same set of tables regardless of their region and credential configuration.
---delayTransientStatuses  -t  Causes DynamoDB to introduce delays for certain operations. DynamoDB can perform some tasks almost instantaneously, such as create/update/delete operations on tables and indexes; however, the actual DynamoDB service requires more time for these tasks. Setting this parameter helps DynamoDB simulate the behavior of the Amazon DynamoDB web service more closely. (Currently, this parameter introduces delays only for global secondary indexes that are in either CREATING or DELETING status.)
---optimizeDbBeforeStartup -o  Optimizes the underlying database tables before starting up DynamoDB on your computer. You must also specify -dbPath when you use this parameter.
---migration               -m  After starting dynamodb local, run dynamodb migrations.
---heapInitial                 The initial heap size
---heapMax                     The maximum heap size
---migrate                 -m  After starting DynamoDB local, create DynamoDB tables from the Serverless configuration.
---seed                    -s  After starting and migrating dynamodb local, injects seed data into your tables. The --seed option determines which data categories to onload.
---convertEmptyValues      -e  Set to true if you would like the document client to convert empty values (0-length strings, binary buffers, and sets) to be converted to NULL types when persisting to DynamoDB.
---docker                      Run DynamoDB inside docker container instead of as a local Java program
---dockerImage                 Specify custom docker image. Default: amazon/dynamodb-local
+```ts
+interface StartOptions {
+  /** Port to listen on. @default 8000 */
+  port: number,
+
+  /** Enable CORS support (cross-origin resource sharing) for JavaScript. You must provide a comma-separated "allow" list of specific domains. @default "*", which allows public access. */
+  cors: string,
+
+  /** Whether to run in memory, instead of using a database file. When you stop DynamoDB none of the data will be saved. Note that you cannot specify both dbPath and inMemory at once. @default true */
+  inMemory: boolean,
+
+  /** The directory where DynamoDB will write its database file. If you do not specify this option, the file will be written to the current directory. Note that you cannot specify both dbPath and inMemory at once. For the path, current working directory is <projectroot>/node_modules/aws-dynamodb-local/dynamodb. For example to create <projectroot>/node_modules/aws-dynamodb-local/dynamodb/<mypath> you should specify '<mypath>/' with a forward slash at the end. @default undefined */
+  dbPath: string | undefined,
+
+  /** DynamoDB will use a single database file, instead of using separate files for each credential and region. If you specify sharedDb, all DynamoDB clients will interact with the same set of tables regardless of their region and credential configuration. @default true */
+  sharedDb: boolean,
+
+  /** Causes DynamoDB to introduce delays for certain operations. DynamoDB can perform some tasks almost instantaneously, such as create/update/delete operations on tables and indexes; however, the actual DynamoDB service requires more time for these tasks. Setting this parameter helps DynamoDB simulate the behavior of the Amazon DynamoDB web service more closely. (Currently, this parameter introduces delays only for global secondary indexes that are in either CREATING or DELETING status.) @default true */
+  delayTransientStatuses: boolean,
+
+  /** Optimizes the underlying database tables before starting up DynamoDB on your computer. You must also specify -dbPath when you use this parameter. @default true */
+  optimizeDbBeforeStartup: boolean,
+
+  /** Prints a usage summary and options. */
+  help: boolean,
+
+  /** A string which sets the initial heap size e.g. '2G'. This is input to the java -Xms argument. @default undefined */
+  heapInitial: string | undefined,
+
+  /** A string which sets the maximum heap size e.g. '4G'. This is input to the java -Xmx argument. @default undefined */
+  heapMax: string | undefined,
+
+  /** Run DynamoDB inside docker container instead of as a local Java program. @default false */
+  docker: boolean,
+
+  /** If docker enabled, custom docker path to use. @default "docker" */
+  dockerPath: string,
+
+  /** If docker enabled, docker image to run. @default "amazon/dynamodb-local" */
+  dockerImage: string,
+
+  /** Set to true if you would like the document client to convert empty values (0-length strings, binary buffers, and sets) to be converted to NULL types when persisting to DynamoDB. **/
+  convertEmptyValues: boolean,
+
+  /** Do not start DynamoDB local (e.g. for use cases where it is already running) */
+  noStart: boolean,
+
+  /** After starting DynamoDB local, create DynamoDB tables from the Serverless configuration. */
+  migrate: boolean,
+
+  /** After starting and migrating dynamodb local, injects seed data into your tables. The --seed option determines which data categories to onload. */
+  seed: boolean,  
+}
 ```
 
 All the above options can be added to serverless.yml to set default configuration: e.g.
@@ -155,7 +191,7 @@ All the above options can be added to serverless.yml to set default configuratio
 ```yaml
 custom:
   serverless-dynamodb:
-  # If you only want to use DynamoDB Local in some stages, declare them here
+    # If you only want to use DynamoDB Local in some stages, declare them here
     stages:
       - dev
     start:
