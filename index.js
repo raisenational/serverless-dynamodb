@@ -394,18 +394,16 @@ class ServerlessDynamodbLocal {
             });
         }
 
-        await dynamodb.raw.send(new CreateTableCommand(migration)).catch(err => {
-            if (err) {
-                if (err.name === 'ResourceInUseException') {
-                    this.serverlessLog(`DynamoDB - Warn - table ${migration.TableName} already exists`);
-                    resolve();
-                } else {
-                    this.serverlessLog("DynamoDB - Error - ", err);
-                    reject(err);
-                }
+        await dynamodb.raw.send(new CreateTableCommand(migration)).then(() => {
+            this.serverlessLog("DynamoDB - created table " + migration.TableName);
+            return migration;
+        }).catch((err) => {
+            if (err.name === 'ResourceInUseException') {
+                this.serverlessLog(`DynamoDB - Warn - table ${migration.TableName} already exists`);
+                return;
             } else {
-                this.serverlessLog("DynamoDB - created table " + migration.TableName);
-                resolve(migration);
+                this.serverlessLog("DynamoDB - Error - ", err);
+                throw err;
             }
         })
     }
