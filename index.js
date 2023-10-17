@@ -270,7 +270,7 @@ class ServerlessDynamodbLocal {
               options.dbPath = path.isAbsolute(dbPath) ? dbPath : path.join(this.serverless.config.servicePath, dbPath);
             }
 
-            (options.noStart ? Promise.resolve() : dynamodbLocal.start(options))
+            return (options.noStart ? Promise.resolve() : dynamodbLocal.start(options))
             .then(() => options.migrate && this.migrateHandler())
             .then(() => options.seed && this.seedHandler());
         } else {
