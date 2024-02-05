@@ -3,14 +3,14 @@ import {
   DynamoDBClient, CreateTableCommand, BatchWriteItemCommand, CreateTableCommandInput,
 } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
-import dynamodbLocal from 'aws-dynamodb-local';
+import * as dynamodbLocal from 'aws-dynamodb-local';
 import type Serverless from 'serverless';
 import type Plugin from 'serverless/classes/Plugin';
 import path from 'node:path';
-import Aws, { CloudFormationResource } from 'serverless/plugins/aws/provider/awsProvider';
-import { StartOptions } from 'aws-dynamodb-local/dist/start';
-import { locateSeeds, writeSeeds } from './seeder';
+import type Aws from 'serverless/plugins/aws/provider/awsProvider';
+import type { CloudFormationResource } from 'serverless/plugins/aws/provider/awsProvider';
 import { Config, SeedConfig } from './config';
+import { locateSeeds, writeSeeds } from './seeder';
 
 const PLUGIN_NAME = 'serverless-dynamodb';
 
@@ -25,7 +25,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
 
   private readonly options:
   & Serverless.Options
-  & Partial<StartOptions>
+  & Parameters<typeof dynamodbLocal.start>[0]
   & { localPath: string, noStart?: string, seed?: boolean, migrate?: boolean }
   & Record<string, string | string[] | boolean | unknown>;
 
