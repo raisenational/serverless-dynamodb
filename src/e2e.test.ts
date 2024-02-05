@@ -28,7 +28,7 @@ beforeAll(async () => {
   plugin = new ServerlessDynamoDBPlugin(serverlessMock, { stage: 'test', region: 'test' });
   await plugin.installHandler();
   await plugin.startHandler();
-});
+}, 30_000);
 
 test('create and list tables, add and scan items', async () => {
   await client.send(new CreateTableCommand({
