@@ -33,12 +33,12 @@ If using the Java version (i.e. not docker), install DynamoDB Local with `server
 
 Add it to your list of plugins, optionally with custom config:
 
-serverless.yaml:
+serverless.yml:
 
 ```yaml
 plugins:
-  - serverless-offline
   - serverless-dynamodb
+  - serverless-offline
 
 custom:
   serverless-dynamodb:
@@ -51,8 +51,8 @@ serverless.js / serverless.ts:
 ```ts
 export default {
   plugins: [
-    "serverless-offline",
     "serverless-dynamodb",
+    "serverless-offline",
   ],
   custom: {
     'serverless-dynamodb': {
