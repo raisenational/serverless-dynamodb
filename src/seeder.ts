@@ -39,6 +39,8 @@ function writeSeedBatch(dynamodbWriteFunction: DynamoDBWriteFunction, tableName:
           if (err) {
             if (err instanceof Error && 'code' in err && err.code === 'ResourceNotFoundException' && interval <= 5000) {
               execute(interval + 1000);
+            } else if (err instanceof TypeError && err.message === "Cannot read properties of undefined (reading '0')") {
+              reject(new Error(`Failed to seed items for the ${tableName} table because of an AWS library error. This usually means your \`rawsources\` seed files are invalid.`, { cause: err }));
             } else {
               reject(err);
             }
