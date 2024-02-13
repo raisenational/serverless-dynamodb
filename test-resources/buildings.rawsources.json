@@ -1,0 +1,18 @@
+[
+    {
+        "id": { "S": "bld_123" },
+        "name": { "S": "Tower A" },
+        "address": { "S": "123 Main Street" },
+        "height": { "N": "150" },
+        "constructedOn": { "S": "2024-02-15" },
+        "isCommercial": { "BOOL": true }
+    },
+    {
+        "id": { "S": "bld_456" },
+        "name": { "S": "Plaza Center" },
+        "address": { "S": "456 Elm Street" },
+        "height": { "N": "100" },
+        "constructedOn": { "S": "2024-06-21" },
+        "isCommercial": { "BOOL": false }
+    }
+]

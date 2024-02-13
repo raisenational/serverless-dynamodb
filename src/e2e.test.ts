@@ -60,6 +60,33 @@ test('create and list tables, add and scan items', async () => {
   expect(items.Items![0]).toEqual(testItem);
 });
 
+test('can migrate and seed tables', async () => {
+  const expectedTables = ['person-table', 'building-table'];
+
+  // The tables do not exist at the beginning
+  const tablesBeforeMigration = await client.send(new ListTablesCommand({}));
+  expect(expectedTables.some((t) => tablesBeforeMigration.TableNames?.includes(t))).toBeFalsy();
+
+  await plugin.migrateHandler();
+
+  // After migration, the tables exist and are empty
+  const tablesAfterMigration = await client.send(new ListTablesCommand({}));
+  expect(expectedTables.every((t) => tablesAfterMigration.TableNames?.includes(t))).toBeTruthy();
+  await Promise.all(expectedTables.map(async (tableName) => {
+    const items = await client.send(new ScanCommand({ TableName: tableName }));
+    expect(items.Items?.length, tableName).toBe(0);
+  }));
+
+  await plugin.seedHandler();
+
+  // After seeding, the tables are not empty
+  // await new Promise((resolve) => setTimeout(resolve, 1000));
+  await Promise.all(expectedTables.map(async (tableName) => {
+    const items = await client.send(new ScanCommand({ TableName: tableName }));
+    expect(items.Items?.length, tableName).not.toBe(0);
+  }));
+});
+
 afterAll(async () => {
   await plugin.endHandler();
 });
