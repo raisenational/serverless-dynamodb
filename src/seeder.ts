@@ -66,8 +66,7 @@ export async function writeSeeds(dynamodbWriteFunction: DynamoDBWriteFunction, t
   }
 
   const seedChunks = chunk(seedValues, MAX_MIGRATION_CHUNK);
-  await Promise.all(seedChunks.map((chunk) => writeSeedBatch(dynamodbWriteFunction, tableName, chunk)))
-    .then(() => console.log(`Seed running complete for table: ${tableName}`));
+  await Promise.all(seedChunks.map((chunk) => writeSeedBatch(dynamodbWriteFunction, tableName, chunk)));
 }
 
 const chunk = <T>(input: T[], size: number): T[][] => {
