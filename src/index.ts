@@ -251,13 +251,14 @@ class ServerlessDynamoDBPlugin implements Plugin {
     if (this.shouldExecute()) {
       const dynamodb = this.dynamodbOptions();
 
-      await Promise.all(this.seedSources.flatMap(async (source) => {
+      await Promise.all(this.seedSources.map(async (source) => {
         if (!source.table) {
           throw new Error('seeding source "table" property not defined');
         }
         const seedPromise = writeSeeds((params) => dynamodb.doc.send(new BatchWriteCommand(params)), source.table, locateSeeds(source.sources || []));
         const rawSeedPromise = writeSeeds((params) => dynamodb.raw.send(new BatchWriteItemCommand(params)), source.table, locateSeeds(source.rawsources || []));
-        return [seedPromise, rawSeedPromise];
+        await Promise.all([seedPromise, rawSeedPromise]);
+        console.log(`Seed running complete for table: ${source.table}`);
       }));
       return;
     }
