@@ -42,8 +42,9 @@ plugins:
 
 custom:
   serverless-dynamodb:
-    port: 8000
-    docker: false
+    start:
+      port: 8000
+      docker: false
 ```
 
 serverless.js / serverless.ts:
@@ -56,8 +57,10 @@ export default {
   ],
   custom: {
     'serverless-dynamodb': {
-      port: 8000,
-      docker: false,
+      start: {
+        port: 8000,
+        docker: false,
+      }
     }
   }
 }
