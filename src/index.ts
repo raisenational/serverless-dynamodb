@@ -183,21 +183,14 @@ class ServerlessDynamoDBPlugin implements Plugin {
     return this.config?.start?.host ?? 'localhost';
   }
 
-  /**
-     * Get the stage
-     *
-     * @return {String} the current stage
-     */
-  get stage() {
+  get stage(): string {
     return (this.options && this.options.stage) || (this.serverless.service.provider && this.serverless.service.provider.stage);
   }
 
   /**
-     * To check if the handler needs to be executed based on stage
-     *
-     * @return {Boolean} if the handler can run for the provided stage
-     */
-  shouldExecute() {
+   * Check if the handler needs to be executed based on stage
+   */
+  shouldExecute(): boolean {
     if (!this.config.stages || this.config.stages.includes(this.stage)) {
       return true;
     }
