@@ -301,7 +301,7 @@ serverless dynamodb seed --seed=domain,test
 serverless dynamodb start --seed=domain,test
 ```
 
-If seed config is set to true, your configuration will be seeded automatically on startup. You can also put the seed to false to prevent initial seeding to use manual seeding via cli.
+The JSON files for sources should look like:
 
 ```json
 [
