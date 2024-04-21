@@ -275,7 +275,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
         ...this.options,
       };
 
-      if (options.dbPath && path.isAbsolute(options.dbPath)) {
+      if (options.dbPath && !path.isAbsolute(options.dbPath)) {
         options.dbPath = path.join(this.serverless.config.servicePath, options.dbPath);
       }
 
