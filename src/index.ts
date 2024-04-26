@@ -56,7 +56,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
               seed: {
                 shortcut: 's',
                 usage: 'After starting and migrating dynamodb local, injects seed data into your tables. The --seed option determines which data categories to onload.',
-                // NB: no `type` intentionally to allow both boolean and string values
+                type: 'string',
               },
             },
           },
