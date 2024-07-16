@@ -378,6 +378,9 @@ class ServerlessDynamoDBPlugin implements Plugin {
     if (command['PointInTimeRecoverySpecification']) {
       delete command['PointInTimeRecoverySpecification'];
     }
+    if (command['DeletionProtectionEnabled']) {
+      delete command['DeletionProtectionEnabled'];
+    }
     if (command['Tags']) {
       delete command['Tags'];
     }
