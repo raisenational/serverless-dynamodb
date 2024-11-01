@@ -13,6 +13,7 @@ export interface Config {
     host?: string;
     port?: number;
     seed?: boolean | string;
+    region?: string;
   },
   stages?: string[],
   seed?: SeedConfig;

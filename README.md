@@ -227,6 +227,23 @@ custom:
     # noStart: true
 ```
 
+Localstack setup:
+```yaml
+custom:
+  serverless-dynamodb:
+    # If you only want to use DynamoDB Local in some stages, declare them here
+    stages:
+      - dev
+    start:
+      # The port that your localstack is running on
+      port: 4566
+      migrate: true
+      seed: true
+      noStart: true
+      # Beware, region is important for localstack
+      region: 'eu-west-1'
+```
+
 ### Migrations: serverless dynamodb migrate
 
 #### Configuration
