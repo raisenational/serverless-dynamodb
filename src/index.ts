@@ -211,7 +211,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
     } else {
       dynamoOptions = {
         endpoint: `http://${this.host}:${this.port}`,
-        region: 'localhost',
+        region: this.config?.start?.region ?? 'localhost',
         credentials: {
           accessKeyId: 'MockAccessKeyId',
           secretAccessKey: 'MockSecretAccessKey',
