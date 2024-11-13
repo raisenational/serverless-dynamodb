@@ -384,7 +384,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
     if (command['Tags']) {
       delete command['Tags'];
     }
-    if (command['BillingMode'] === 'PAY_PER_REQUEST') {
+    if (command['BillingMode'] !== 'PROVISIONED') {
       delete command['BillingMode'];
 
       const defaultProvisioning = {
