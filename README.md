@@ -334,7 +334,7 @@ The JSON files for sources should look like:
 This is a drop-in replacement for `serverless-dynamodb-local`. To upgrade therefore:
 
 1. Uninstall `serverless-dynamodb-local`, e.g. `npm uninstall serverless-dynamodb-local`
-2. Install `serverless-dynamodb`, e.g. `npm install serverless-dynamodb`
+2. Install `serverless-dynamodb`, e.g. `npm install serverless-dynamodb` and `serverless dynamodb install`
 3. Update references in your code, including your serverless config, from `serverless-dynamodb-local` to `serverless-dynamodb`
 4. (optional) Update your serverless config custom `dynamodb` key to `serverless-dynamodb`
 
