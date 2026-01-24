@@ -13,9 +13,9 @@ jobs:
       CI: true
     steps:
       - name: Checkout ${{ github.sha }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org/
@@ -32,13 +32,16 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
     env:
       CI: true
     steps:
       - name: Checkout ${{ github.sha }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Use Node.js with the npmjs.org registry
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: lts/*
           registry-url: https://registry.npmjs.org/
@@ -46,7 +49,17 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build --if-present
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/457105351064/locations/global/workloadIdentityPools/github-secrets-pool/providers/github-secrets-github'
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Get NPM token
+        id: npm-token
+        run: |
+          token=$(gcloud secrets versions access latest --secret=npm-token --project=gcp-github-secrets)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
       - name: Publish ${{ github.ref }}
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ steps.npm-token.outputs.token }}
