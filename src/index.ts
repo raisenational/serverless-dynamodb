@@ -19,7 +19,9 @@ class ServerlessDynamoDBPlugin implements Plugin {
 
 	readonly commands: Plugin.Commands;
 
-	readonly provider = 'aws';
+	get provider() {
+		return 'aws';
+	}
 
 	private readonly config: Config;
 
@@ -184,7 +186,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
 	}
 
 	get stage(): string {
-		return (this.options?.stage) || (this.serverless.service.provider && this.serverless.service.provider.stage);
+		return (this.options?.stage) || (this.serverless.service.provider?.stage);
 	}
 
 	/**
@@ -202,7 +204,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
 		let dynamoOptions = {};
 
 		if (this.options?.['online']) {
-			this.serverless.cli.log('Connecting to online tables...');
+			this.log('Connecting to online tables...');
 			if (!this.options.region) {
 				throw new Error('please specify the region');
 			}
@@ -241,7 +243,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
 			return;
 		}
 
-		this.serverless.cli.log(`Skipping migration: DynamoDB Local is not available for stage: ${this.stage}`);
+		this.log(`Skipping migration: DynamoDB Local is not available for stage: ${this.stage}`);
 	}
 
 	async seedHandler() {
@@ -261,7 +263,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
 			return;
 		}
 
-		this.serverless.cli.log(`Skipping seeding: DynamoDB Local is not available for stage: ${this.stage}`);
+		this.log(`Skipping seeding: DynamoDB Local is not available for stage: ${this.stage}`);
 	}
 
 	async removeHandler() {
@@ -297,7 +299,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
 				await this.seedHandler();
 			}
 		} else {
-			this.serverless.cli.log(`Skipping start: DynamoDB Local is not available for stage: ${this.stage}`);
+			this.log(`Skipping start: DynamoDB Local is not available for stage: ${this.stage}`);
 		}
 	}
 
@@ -308,10 +310,10 @@ class ServerlessDynamoDBPlugin implements Plugin {
 		};
 
 		if (this.shouldExecute() && !options['noStart']) {
-			this.serverless.cli.log('DynamoDB - stopping local database');
-			dynamodbLocal.stop(this.port);
+			this.log('DynamoDB - stopping local database');
+			await dynamodbLocal.stop(this.port);
 		} else {
-			this.serverless.cli.log(`Skipping end: DynamoDB Local is not available for stage: ${this.stage}`);
+			this.log(`Skipping end: DynamoDB Local is not available for stage: ${this.stage}`);
 		}
 	}
 
@@ -353,7 +355,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
 		} else if (seed) {
 			categories = Object.keys(seedConfig);
 		} else { // if (!seed)
-			this.serverless.cli.log('DynamoDB - No seeding defined. Skipping data seeding.');
+			this.log('DynamoDB - No seeding defined. Skipping data seeding.');
 			return [];
 		}
 
@@ -408,8 +410,8 @@ class ServerlessDynamoDBPlugin implements Plugin {
 			};
 			command['ProvisionedThroughput'] = defaultProvisioning;
 			if (command['GlobalSecondaryIndexes']) {
-				for (let i = 0; i < command['GlobalSecondaryIndexes'].length; i++) {
-					command['GlobalSecondaryIndexes'][i].ProvisionedThroughput = defaultProvisioning;
+				for (const element of command['GlobalSecondaryIndexes']) {
+					element.ProvisionedThroughput = defaultProvisioning;
 				}
 			}
 		}
@@ -423,26 +425,31 @@ class ServerlessDynamoDBPlugin implements Plugin {
 		}
 
 		if (command['GlobalSecondaryIndexes']) {
-			for (let i = 0; i < command['GlobalSecondaryIndexes'].length; i++) {
-				delete command['GlobalSecondaryIndexes'][i].ContributorInsightsSpecification;
+			for (const element of command['GlobalSecondaryIndexes']) {
+				delete element.ContributorInsightsSpecification;
 			}
 		}
 
 		try {
 			await dbClients.raw.send(new CreateTableCommand(command as unknown as CreateTableCommandInput));
-			this.serverless.cli.log(`DynamoDB - created table ${command['TableName']}`);
+			this.log(`DynamoDB - created table ${command['TableName']}`);
 		} catch (err) {
 			if (err instanceof Error && err.name === 'ResourceInUseException') {
-				this.serverless.cli.log(`DynamoDB - Warn - table ${command['TableName']} already exists`);
+				this.log(`DynamoDB - Warn - table ${command['TableName']} already exists`);
 			} else if (err instanceof Error) {
-				this.serverless.cli.log('DynamoDB - Error - ', err.message);
+				this.log('DynamoDB - Error - ', err.message);
 				throw err;
 			} else {
 				const normalizedErr = new Error(String(err));
-				this.serverless.cli.log('DynamoDB - Error - ', normalizedErr.message);
+				this.log('DynamoDB - Error - ', normalizedErr.message);
 				throw normalizedErr;
 			}
 		}
+	}
+
+	private log(message: string, entity?: string, options?: Serverless.LogOptions): void {
+		// eslint-disable-next-line @typescript-eslint/no-deprecated
+		this.serverless.cli.log(message, entity, options);
 	}
 }
 

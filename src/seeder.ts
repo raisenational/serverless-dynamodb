@@ -42,6 +42,7 @@ async function writeSeedBatch(dynamodbWriteFunction: DynamoDBWriteFunction, tabl
 						} else if (err instanceof TypeError && err.message === 'Cannot read properties of undefined (reading \'0\')') {
 							reject(new Error(`Failed to seed items for the ${tableName} table because of an AWS library error. This usually means your \`rawsources\` seed files are invalid.`, {cause: err}));
 						} else {
+							// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 							reject(err);
 						}
 					}

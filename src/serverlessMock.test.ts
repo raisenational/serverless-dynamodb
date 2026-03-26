@@ -53,7 +53,7 @@ const serverlessMock = {
 
 	},
 	cli: {
-		log() { },
+		log() {/* empty */},
 	},
 } as unknown as Serverless;
 
