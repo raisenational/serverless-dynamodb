@@ -186,7 +186,7 @@ class ServerlessDynamoDBPlugin implements Plugin {
 	}
 
 	get stage(): string {
-		return (this.options && this.options.stage) || (this.serverless.service.provider?.stage);
+		return (this.options?.stage) || (this.serverless.service.provider?.stage);
 	}
 
 	/**
