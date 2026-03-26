@@ -17,6 +17,7 @@
         "test": "vitest run",
         "test:watch": "vitest --watch",
         "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
+        "lint:fix": "eslint --fix --ext .js,.jsx,.ts,.tsx .",
         "clean": "rm -rf dist",
         "build": "tsc --project tsconfig.build.json",
         "prepublishOnly": "npm run clean && npm run build"
@@ -31,8 +32,8 @@
         "@tsconfig/strictest": "^2.0.8",
         "@types/node": "^20.14.8",
         "@types/serverless": "^3.12.27",
-        "eslint": "^8.56.0",
-        "eslint-config-domdomegg": "^1.2.3",
+        "eslint": "^9.39.2",
+        "eslint-config-domdomegg": "^2.0.9",
         "typescript": "^5.9.3",
         "vitest": "^4.0.17"
     },
@@ -50,10 +51,5 @@
         "amazon",
         "amazon web services",
         "serverless.com"
-    ],
-    "eslintConfig": {
-        "extends": [
-            "eslint-config-domdomegg"
-        ]
-    }
+    ]
 }
